@@ -1,0 +1,47 @@
+#include <Stepper.h>
+#include <SoftwareSerial.h>
+
+const int stepsPerRevolution = 200;  // change this to fit the number of steps per revolution for your motor
+
+// initialize the stepper library on pins 2 through 5 for the two motors:
+Stepper stepper1(stepsPerRevolution, 2, 3);
+Stepper stepper2(stepsPerRevolution, 4, 5);
+
+// Define the Bluetooth serial connection
+SoftwareSerial BTSerial(14, 15); // RX, TX
+
+void setup() {
+  // set the speed at 60 rpm:
+  stepper1.setSpeed(60);
+  stepper2.setSpeed(60);
+  
+  // initialize the serial port:
+  Serial.begin(9600);
+  
+  // Start the Bluetooth connection
+  BTSerial.begin(9600);
+}
+
+void loop() {
+  // Check if there's any data available from the Bluetooth connection
+  if (BTSerial.available()) {
+    String command = BTSerial.readStringUntil('\n');
+    
+    if (command[0] == 'M') {
+      // This is a motor command
+      command.remove(0, 1);
+      int steps = command.toInt();
+      stepper1.step(steps);
+      stepper2.step(steps);
+    } else if (command[0] == 'P') {
+      // This is a manipulator command
+      command.remove(0, 1);
+      int commaIndex1 = command.indexOf(',');
+      int commaIndex2 = command.lastIndexOf(',');
+      int x = command.substring(0, commaIndex1).toInt();
+      int y = command.substring(commaIndex1 + 1, commaIndex2).toInt();
+      int z = command.substring(commaIndex2 + 1).toInt();
+      // Here you would add the code to move the manipulator to the x, y, z position
+    }
+  }
+}
